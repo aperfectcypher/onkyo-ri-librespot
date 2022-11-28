@@ -20,4 +20,4 @@
 Add this to librespot's cmd line: 
 - /usr/bin/librespot __--onevent /opt/onkyo/spothook.sh__
 
-
+- [ ] TODO write a setup
