@@ -1,0 +1,18 @@
+[Unit]
+Description=librespot event hadler for Onkyo receiver
+Wants=network.target sound.target
+After=network.target sound.target
+StartLimitBurst=5
+StartLimitIntervalSec=60
+
+[Service]
+DynamicUser=yes
+SupplementaryGroups=audio
+ReadWriteDirectories=+/opt/onkyo
+Restart=always
+RestartSec=10
+RestartPreventExitStatus=0
+ExecStart=/usr/bin/python /opt/onkyo/onkyo-ri.py
+
+[Install]
+WantedBy=multi-user.target
