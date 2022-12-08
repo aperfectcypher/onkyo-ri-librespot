@@ -6,7 +6,8 @@
  - sudo mkdir /opt/onkyo
  - sudo chmod -R 0755 /opt/onkyo
  - cd /opt/onkyo
- - git clone git@github.com:aperfectcypher/onkyo-ri-librespot.git .
+ - sudo git clone https://github.com/aperfectcypher/onkyo-ri-librespot.git .
+ - sudo apt install python3-pip
  - pip install pigpio
  - sudo apt install pigpio
  - sudo systemctl start pigpiod.service
