@@ -1,4 +1,4 @@
-import pigpio
+import RPi.GPIO as GPIO
 import os
 import time
 
@@ -19,42 +19,35 @@ os.mkfifo(VOLUME_FIFO_NAME)
 os.chmod(VOLUME_FIFO_NAME, 0o777)
 
 ## IO setup
-pi = pigpio.pi()
-pi.set_mode(ONKYO_PIN, pigpio.OUTPUT)
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(ONKYO_PIN, GPIO.OUT)
+def _send_header():
+    GPIO.output(ONKYO_PIN, GPIO.HIGH)
+    time.sleep(0.003)
+    GPIO.output(ONKYO_PIN, GPIO.LOW)
+    time.sleep(0.001)
 
-def _create_header_wave():
-    wf = []
-    wf.append(pigpio.pulse(1 << ONKYO_PIN, 0, 3000))
-    wf.append(pigpio.pulse(0, 1 << ONKYO_PIN, 1000))
-    return wf
+def _send_trailer():
+    GPIO.output(ONKYO_PIN, GPIO.HIGH)
+    time.sleep(0.001)
+    GPIO.output(ONKYO_PIN, GPIO.LOW)
+    time.sleep(0.020)
 
-def _create_trailer_wave():
-    wf = []
-    wf.append(pigpio.pulse(1 << ONKYO_PIN, 0, 1000))
-    wf.append(pigpio.pulse(0, 1 << ONKYO_PIN, 40000))
-    return wf
-
-def _create_command_wave(command):
-    wf = []
-    for x in range(0, 12):
-        gap = 2000 if command & 2048 != 0 else 1000
-        wf.append(pigpio.pulse(1 << ONKYO_PIN, 0, 1000))
-        wf.append(pigpio.pulse(0, 1 << ONKYO_PIN, gap))
-        command = command << 1
-    return wf
+# Send the 12 LSB of the command parameter
+# each bit duration is 1ms
+def _send_command(command):
+    for i in range(12):
+        if command & (1 << i):
+            GPIO.output(ONKYO_PIN, GPIO.HIGH)
+        else:
+            GPIO.output(ONKYO_PIN, GPIO.LOW)
+        time.sleep(0.001)
 
 def send(command):
-    pi.wave_clear()
-
-    wave_elements = _create_header_wave() + \
-    _create_command_wave(command) + \
-    _create_trailer_wave()
-
-    pi.wave_add_generic(wave_elements)
-    pi.wave_send_once(pi.wave_create())
-
-    while pi.wave_tx_busy():
-        time.sleep(0.1)
+    _send_header()
+    _send_command(command)
+    _send_trailer()
 
 
 # program loop
@@ -64,7 +57,7 @@ with open(EVENT_FIFO_NAME, "r") as fifo:
         if len(event) == 0:
             time.sleep(0.1)
             continue
-        
+ 
         print("Event received: " + event)
 
         if event == "started":
