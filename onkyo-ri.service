@@ -1,5 +1,5 @@
 [Unit]
-Description=librespot event hadler for Onkyo receiver
+Description=librespot event handler for Onkyo receiver
 Wants=network.target sound.target
 After=network.target sound.target
 StartLimitBurst=5
